@@ -15,12 +15,11 @@ Based on Tv-K's https://github.com/T-vK/ESP32-BLE-Keyboard
 #include <LiquidCrystal_I2C.h>
 
 bool muted = 1;
-String ircChannel = "";
 int runonce = 0;
 
-BleKeyboard bleKeyboard("BT Streamdeck", "DOP", 100);
+BleKeyboard bleKeyboard;
 
-int keypress = 100; // delay between keypad press and release
+int keypress = 1000; // delay between keypad press and release
 const byte ROWS = 6;
 const byte COLS = 8;
 
@@ -60,10 +59,12 @@ void loop() {
 
   if(bleKeyboard.isConnected()) {
 
+
+
 if (runonce == 0){
 //run your default state here, eg I duplicated button 1's functionality
 
-
+    Serial.println("Connected to Bluetooth");
     delay(keypress);
     lcd.setCursor(0,0);
     lcd.print("D.I.Y. Stream Deck");
@@ -96,8 +97,8 @@ if (customKey){
     // Send command to your bot to trigger the Kruiz Control command
     Serial.println("0");
 
-    Serial.println("Sending F1...");
-    bleKeyboard.write(KEY_F1);
+    Serial.println("PAUSE");
+        bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
     delay(keypress);
 
     
