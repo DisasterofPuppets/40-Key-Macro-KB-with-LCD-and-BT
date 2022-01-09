@@ -57,6 +57,27 @@ void setup() {
 
 void loop() {
 
+/*
+ * This works..because outside of the matrix code?
+Serial.println("3");
+delay(1000);
+Serial.println("2");
+delay(1000);
+Serial.println("1");
+delay(1000);
+Serial.println("Pausing Music...");
+bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
+delay(1000);
+Serial.println("3");
+delay(1000);
+Serial.println("2");
+delay(1000);
+Serial.println("1");
+delay(1000);
+Serial.println("Resuming Music...");
+bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
+*/
+
   if(bleKeyboard.isConnected()) {
 
 
@@ -73,7 +94,9 @@ if (runonce == 0){
     runonce = 1;
 }
 
-  /* Serial.println("Sending Ctrl+Alt+Delete...");
+  /* 
+   //saving here for example of multiple keys at once
+    Serial.println("Sending Ctrl+Alt+Delete...");
     bleKeyboard.press(KEY_LEFT_CTRL);
     bleKeyboard.press(KEY_LEFT_ALT);
     bleKeyboard.press(KEY_DELETE);
@@ -94,11 +117,11 @@ if (customKey){
 // Live   
     
   case '0':
-    // Send command to your bot to trigger the Kruiz Control command
     Serial.println("0");
 
     Serial.println("PAUSE");
         bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
+        //this was working when using the example code. Keypad issue / incompatability?
     delay(keypress);
 
     
