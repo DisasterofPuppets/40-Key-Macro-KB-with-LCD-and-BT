@@ -8,18 +8,22 @@ Don't forget to press the flash button when uploading the sketch
 
 Based on Tv-K's https://github.com/T-vK/ESP32-BLE-Keyboard
 
+To DO
+Doesn't seem to work unless you remove and re-add the Bluetooth connection each time.
+
  *******************************************************************/
 
 #include <BleKeyboard.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 
-bool muted = 1;
-int runonce = 0;
+bool muted = false;
+bool runonce = true;
+bool blur = false;
 
-BleKeyboard bleKeyboard;
+BleKeyboard bleKeyboard("BT Stream Deck", "JoMamma", 100);
 
-int keypress = 1000; // delay between keypad press and release
+int keypress = 100; // delay between keypad press and release
 const byte ROWS = 6;
 const byte COLS = 8;
 
@@ -48,7 +52,6 @@ void setup() {
 
   Serial.begin(115200);
   bleKeyboard.begin();
-  
   lcd.init(); // initialize the lcd
   lcd.init();
   lcd.backlight();
@@ -57,41 +60,18 @@ void setup() {
 
 void loop() {
 
-/*
- * This works..because outside of the matrix code?
-Serial.println("3");
-delay(1000);
-Serial.println("2");
-delay(1000);
-Serial.println("1");
-delay(1000);
-Serial.println("Pausing Music...");
-bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
-delay(1000);
-Serial.println("3");
-delay(1000);
-Serial.println("2");
-delay(1000);
-Serial.println("1");
-delay(1000);
-Serial.println("Resuming Music...");
-bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
-*/
 
   if(bleKeyboard.isConnected()) {
 
-
-
-if (runonce == 0){
-//run your default state here, eg I duplicated button 1's functionality
-
+if (runonce){
+// You can make a custom message here, or even duplicate one of the buttons so it is default
     Serial.println("Connected to Bluetooth");
     delay(keypress);
     lcd.setCursor(0,0);
-    lcd.print("D.I.Y. Stream Deck");
+    lcd.print("BT Connected");
     lcd.setCursor(0,1);
     lcd.print("                ");
-    runonce = 1;
+    runonce = false;
 }
 
   /* 
@@ -106,6 +86,7 @@ if (runonce == 0){
 
 
 //*********** Keypad Matrix *************
+
 char customKey = customKeypad.getKey();
  
 if (customKey){
@@ -118,71 +99,102 @@ if (customKey){
     
   case '0':
     Serial.println("0");
-
-    Serial.println("PAUSE");
-        bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
-        //this was working when using the example code. Keypad issue / incompatability?
+    Serial.println("Live");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F1);
     delay(keypress);
-
-    
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
     lcd.print("PC / Live");
-  break;
+    break;
 
-// Craft Desk
+// Blur
 
   case '1':
+    if (!blur) {
     Serial.println("1");
-
+    Serial.println("Blur On");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F2);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
-    lcd.print("Blur ON");
-  break;
+    lcd.print("Blurred         ");
+    blur = true;
+    }
+    else if (blur) {
+    Serial.println("1");
+    Serial.println("Blur Off");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F2);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    blur = false;
+    }
+    break;
+          
+//
 
-// Craft Desk FullScreen Cam
+  // Craft Desk FullScreen Cam
 
   case '2':
     Serial.println("2");
-
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F3);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
-    lcd.print("Blur OFF");
-  break;
+    lcd.print("                ");
+    break;
 
 // Spare
 
   case '3':
-   Serial.println("3");
-
+    Serial.println("3");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F4);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("                ");
     break;
 
 // Idle
 
   case '4':
     Serial.println("4");
-
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F5);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
-    lcd.print("Idle");
+    lcd.print("IDLE            ");
     break;
 
 //Disclaimer
 
   case '5':
     Serial.println("5");
-
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F6);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
-    lcd.print("                ");
+    lcd.print("                "); 
     lcd.setCursor(0,0);
     lcd.print("Disclaimer");
     break;
@@ -191,8 +203,10 @@ if (customKey){
 
   case '6':
     Serial.println("6");
-
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F7);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
@@ -202,15 +216,14 @@ if (customKey){
 // BRB
   case '7':
     Serial.println("7");        
-
-    Serial.println("Sending F20...");
-    bleKeyboard.write(KEY_F20);
-    
-    
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F8);
+    delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
-    lcd.print("BRB");
+    lcd.print("Brb");
     break;
 
 // ROW 2 ---------------------------------
@@ -219,60 +232,102 @@ if (customKey){
 
   case '8':
     Serial.println("8");
-
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F9);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
-    lcd.print("FS Cam");
+    lcd.print("F/S Webcam");
     break;
 
 //Spare
 
   case '9':
     Serial.println("9");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F10);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
     break;
 
 // Dodgy Paintbrush Time
   case 'A':
     Serial.println("A");
-
-    delay(keypress);           
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F11);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Dodgy PB");
     break;
 
 //Spare
   case 'B':
     Serial.println("B");
+    bleKeyboard.press(KEY_LEFT_CTRL);
+    bleKeyboard.press(KEY_F12);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
     break;
 
 //Red
   case 'C':
     Serial.println("C");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(48);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Red Door");
     break;
 
 //Green
   case 'D':
     Serial.println("D");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(49);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Green Door");
     break;
 
 //Blue
   case 'E':
     Serial.println("E");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(50);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Blue Door");
     break;
 
 //DoorPrize
   case 'F':
     Serial.println("F");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(51);
     delay(keypress);
+    bleKeyboard.releaseAll();
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,0);
@@ -281,80 +336,135 @@ if (customKey){
 
 // ROW 3 ---------------------------------
 
-// Logitech Webcam Toggle
+// Spare
 
   case 'G':
     Serial.println("G");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(52);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
 
-      delay(keypress);
-      break;
-
-// Panasonic Cam Toggle
+// Spare
 
   case 'H':
     Serial.println("H");
-
-      delay(keypress);
-      break;
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(53);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
     
 // Spare
 
   case 'I':
     Serial.println("I");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(54);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
     break;
 
 // Spare
 
   case 'J':
     Serial.println("J");
-
-      delay(keypress);
-      break;
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(55);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
           
     
 // ROW 4 ---------------------------------
 
 
-//Iphone Desk Cam Toggle
+//Spare
 
   case 'K':
     Serial.println("K");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(56);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
 
-      delay(keypress);
-      break;
-
-// Iphone Bot Cam Toggle
+// Spare
   
   case 'L':
     Serial.println("L");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(57);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
 
-      delay(keypress);
-      break;
-
-//Nulls
+//Spare
 
   case '~':
     Serial.println("~ NULL ~");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(58);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
     break;
 
 // Spare
 
   case 'M':
-      Serial.println("M");
-
-      delay(keypress);  
-      break;
+    Serial.println("M");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(59);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;
 
 // Spare
 
   case 'N':
-      Serial.println("N");
-
-      delay(keypress);
-      break;          
+    Serial.println("N");
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F1);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Spare");
+    break;        
 
 // ROW 5 ---------------------------------
 
@@ -362,65 +472,113 @@ if (customKey){
 
   case 'O':
     Serial.println("O");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F2);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Stamp");
+    break;        
 
 // BS
 
   case 'P':
     Serial.println("P");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F3);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Bullshit");
+    break;        
 
 // KISS
 
   case 'Q':
     Serial.println("Q");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F4);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Kiss");
+    break;        
 
 //PUN
 
   case 'R':
     Serial.println("R");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F5);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Pun");
+    break;        
 
 // Who are these people?
 
   case 'S':
     Serial.println("S");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F6);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Who are these people");
+    break;        
 
 // I disagree
 
   case 'T':
     Serial.println("T");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F7);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("I disagree");
+    break;        
 
 // Sexytimes
 
   case 'U':
     Serial.println("U");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F8);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("He does Sex");
+    break;        
 
 // Why is / isn't it working gif?
 
   case 'V':
     Serial.println("V");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F9);
     delay(keypress);
-    break;       
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Not Working");
+    break;          
 
 // ROW 6 ------------------------------
 
@@ -428,85 +586,137 @@ if (customKey){
 
   case 'W': 
     Serial.println("W");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F10);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Good Game");
+    break;        
 
 // McScuse me          
 
   case 'X':
     Serial.println("X");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F11);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("McScuse Me Bitch");
+    break;        
 
 // Cheese it
 
   case 'Y':
     Serial.println("Y");
-
+    bleKeyboard.press(KEY_LEFT_SHIFT);
+    bleKeyboard.press(KEY_F12);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Cheese It");
+    break;        
 
 // Tech support
 
   case 'Z':
     Serial.println("Z");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(48);
     delay(keypress);
-    break;
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Tech Support");
+    break;        
 
 // Sthap it
 
   case '!':
-    Serial.println("!");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(49);
     delay(keypress);
-    break;   
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Sthap it");
+    break; 
 
 // Phrasing
 
   case '@':
     Serial.println("@");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(50);
     delay(keypress);
-    break;   
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Phrasing");
+    break; 
 
 // Kruiz Control Reset
 
   case '#':
     Serial.println("#");
-
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(51);
     delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Kruiz Control Resetting");
     break;   
 
 // Mute
 
   case '$':
     Serial.println("$");
-    if (muted) {
-
-      delay(keypress);
-      lcd.setCursor(0,1);
-      lcd.print("                ");
-      lcd.setCursor(0,1);
-      lcd.print("***MUTED***");
-      muted = 0;
+  if (!muted) {
+    Serial.println("Mute");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(52);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Muted**         ");
+    muted = true;
     }
-    else if (!muted) {
-
-      delay(keypress);
-      lcd.setCursor(0,1);
-      lcd.print("                ");
-      muted = 1;     
+    else if (muted) {
+    Serial.println("$");
+    Serial.println("Mute Off");
+    bleKeyboard.press(KEY_LEFT_ALT);
+    bleKeyboard.press(52);
+    delay(keypress);
+    bleKeyboard.releaseAll();
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    muted = false;
     }
     break;
-            
+ 
+
+
             
      }
   }
-  
-}
-}
 
- 
+//*********** END Keypad Matrix *************
+  
+  }
+}
